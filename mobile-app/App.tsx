@@ -75,6 +75,7 @@ function Conversation({ url, onConnect }: { url: string; onConnect: (url: string
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <View style={styles.screen}>
+        <Pressable accessibilityRole="button" onPress={() => { setDraft(url); setAddressError(''); setSettingsOpen(true); }} style={({ pressed }) => [styles.settingsButton, pressed && styles.pressed]}><Text style={styles.translateText}>Server settings</Text></Pressable>
         <View style={styles.people}>
           {(['person-1', 'person-2'] as const).map((userId, index) => (
             <View key={userId} style={[styles.person, index === 1 && styles.secondPerson]}>
@@ -95,7 +96,6 @@ function Conversation({ url, onConnect }: { url: string; onConnect: (url: string
           onScroll={({ nativeEvent }) => { nearBottom.current = nativeEvent.contentSize.height - nativeEvent.layoutMeasurement.height - nativeEvent.contentOffset.y < 100; }}
           scrollEventThrottle={100}
           onContentSizeChange={() => { if (nearBottom.current) list.current?.scrollToEnd({ animated: true }); }}
-          ListHeaderComponent={<Text style={styles.sectionLabel}>THE CONVERSATION</Text>}
           ListEmptyComponent={
             <View style={styles.empty}>
               <Text style={styles.emptyCharacter}>橋</Text>
@@ -104,10 +104,6 @@ function Conversation({ url, onConnect }: { url: string; onConnect: (url: string
             </View>
           }
         />
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Translate into the other person’s latest language.</Text>
-          <Pressable accessibilityRole="button" onPress={() => { setDraft(url); setAddressError(''); setSettingsOpen(true); }} style={({ pressed }) => [styles.settingsButton, pressed && styles.pressed]}><Text style={styles.translateText}>Server settings</Text></Pressable>
-        </View>
       </View>
 
       <Modal visible={settingsOpen} transparent animationType="fade" onRequestClose={() => setSettingsOpen(false)}>
@@ -147,7 +143,6 @@ const styles = StyleSheet.create({
   personLanguage: { fontSize: 12, color: '#66726B', marginTop: 3 },
   list: { flex: 1 },
   messages: { paddingHorizontal: 22, paddingTop: 26, paddingBottom: 24, gap: 22, flexGrow: 1 },
-  sectionLabel: { textAlign: 'center', fontSize: 10, fontWeight: '600', letterSpacing: 2, color: '#66726B', marginBottom: 6 },
   messageRow: { alignItems: 'flex-start' },
   rightRow: { alignItems: 'flex-end' },
   messageMeta: { color: '#66726B', fontSize: 11, marginBottom: 7, paddingHorizontal: 3 },
@@ -162,8 +157,6 @@ const styles = StyleSheet.create({
   translateText: { fontSize: 12, fontWeight: '600', color: '#25685F', flexShrink: 1 },
   muted: { color: '#66726B' },
   time: { color: '#66726B', fontSize: 10, paddingHorizontal: 3, marginTop: 6 },
-  footer: { paddingHorizontal: 22, paddingVertical: 16, borderTopWidth: 1, borderTopColor: '#E4E5DA' },
-  footerText: { fontSize: 11, color: '#66726B', textAlign: 'center' },
   errorBanner: { marginHorizontal: 22, marginTop: 14, padding: 12, backgroundColor: '#F9E6DB', borderRadius: 12, color: '#873E24', fontSize: 13 },
   inlineError: { color: '#873E24', fontSize: 12, lineHeight: 18, paddingBottom: 10 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 40, gap: 12 },
