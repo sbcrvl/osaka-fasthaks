@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -15,6 +16,7 @@ function Conversation({ url, onConnect }: { url: string; onConnect: (url: string
   const [draft, setDraft] = useState(url);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [addressError, setAddressError] = useState('');
+  const [headerHeight, setHeaderHeight] = useState(0);
   const { messages, status, error, translations, translate } = useConversation(url);
   const list = useRef<FlatList<Message>>(null);
   const nearBottom = useRef(true);
@@ -75,24 +77,27 @@ function Conversation({ url, onConnect }: { url: string; onConnect: (url: string
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <View style={styles.screen}>
-        <Pressable accessibilityRole="button" onPress={() => { setDraft(url); setAddressError(''); setSettingsOpen(true); }} style={({ pressed }) => [styles.settingsButton, pressed && styles.pressed]}><Text style={styles.translateText}>Server settings</Text></Pressable>
-        <View style={styles.people}>
-          {(['person-1', 'person-2'] as const).map((userId, index) => (
-            <View key={userId} style={[styles.person, index === 1 && styles.secondPerson]}>
-              <View style={[styles.avatar, index === 1 && styles.secondAvatar]}><Text style={styles.avatarText}>{index + 1}</Text></View>
-              <View><Text style={styles.personName}>{people[userId]}</Text><Text style={styles.personLanguage}>{latest[userId] ? languageName(latest[userId]!) : 'Waiting to speak'}</Text></View>
-            </View>
-          ))}
-        </View>
+        <View pointerEvents="box-none" style={styles.header} onLayout={({ nativeEvent }) => setHeaderHeight(nativeEvent.layout.height)}>
+          <LinearGradient pointerEvents="none" colors={['#FAF8F3', '#FAF8F300']} locations={[0.25, 1]} style={styles.headerFade} />
+          <Pressable accessibilityRole="button" onPress={() => { setDraft(url); setAddressError(''); setSettingsOpen(true); }} style={({ pressed }) => [styles.settingsButton, pressed && styles.pressed]}><Text style={styles.translateText}>Server settings</Text></Pressable>
+          <View style={styles.people}>
+            {(['person-1', 'person-2'] as const).map((userId, index) => (
+              <View key={userId} style={[styles.person, index === 1 && styles.secondPerson]}>
+                <View style={[styles.avatar, index === 1 && styles.secondAvatar]}><Text style={styles.avatarText}>{index + 1}</Text></View>
+                <View><Text style={styles.personName}>{people[userId]}</Text><Text style={styles.personLanguage}>{latest[userId] ? languageName(latest[userId]!) : 'Waiting to speak'}</Text></View>
+              </View>
+            ))}
+          </View>
 
-        {!!error && <Text accessibilityRole="alert" style={styles.errorBanner}>{error}</Text>}
+          {!!error && <Text accessibilityRole="alert" style={styles.errorBanner}>{error}</Text>}
+        </View>
         <FlatList
           ref={list}
           data={messages}
           renderItem={renderMessage}
           keyExtractor={message => message.id}
           style={styles.list}
-          contentContainerStyle={styles.messages}
+          contentContainerStyle={[styles.messages, { paddingTop: headerHeight + 26 }]}
           onScroll={({ nativeEvent }) => { nearBottom.current = nativeEvent.contentSize.height - nativeEvent.layoutMeasurement.height - nativeEvent.contentOffset.y < 100; }}
           scrollEventThrottle={100}
           onContentSizeChange={() => { if (nearBottom.current) list.current?.scrollToEnd({ animated: true }); }}
@@ -133,7 +138,9 @@ export default function App() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FAF8F3' },
   screen: { flex: 1, width: '100%', maxWidth: 760, alignSelf: 'center' },
-  people: { flexDirection: 'row', marginHorizontal: 22, marginTop: 18, padding: 16, borderRadius: 20, backgroundColor: '#F0EEE6', gap: 12 },
+  header: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1 },
+  headerFade: { position: 'absolute', top: 0, left: 0, right: 0, bottom: -20 },
+  people: { flexDirection: 'row', marginHorizontal: 22, marginTop: 4, padding: 16, borderRadius: 20, backgroundColor: '#F0EEE6', gap: 12 },
   person: { flex: 1, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 10 },
   secondPerson: { borderLeftWidth: 1, borderLeftColor: '#DADDD2', paddingLeft: 16 },
   avatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: '#D6E5DD' },
@@ -163,7 +170,7 @@ const styles = StyleSheet.create({
   emptyCharacter: { color: '#A3B4A6', fontSize: 60 },
   emptyTitle: { color: '#34453D', fontSize: 18, textAlign: 'center' },
   emptyCopy: { color: '#66726B', fontSize: 14, textAlign: 'center', lineHeight: 22 },
-  settingsButton: { minHeight: 44, alignSelf: 'center', justifyContent: 'center', paddingHorizontal: 16 },
+  settingsButton: { minHeight: 44, alignSelf: 'center', justifyContent: 'center', paddingHorizontal: 12 },
   overlay: { flex: 1, backgroundColor: '#172C2666', alignItems: 'center', justifyContent: 'center', padding: 24 },
   sheet: { width: '100%', maxWidth: 440, borderRadius: 24, padding: 24, backgroundColor: '#FAF8F3' },
   sheetTitle: { color: '#243D37', fontSize: 22, fontWeight: '600' },
