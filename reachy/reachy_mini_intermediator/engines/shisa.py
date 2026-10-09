@@ -186,6 +186,7 @@ class ShisaRealtimeASR(StreamingASR):
         self._ready = threading.Event()
         self._session_t0: float | None = None  # wall time of the session's first sample
         self._thread: threading.Thread | None = None
+        self._utt_lang: dict[str, Any] = {}  # utterance_id -> language from utterance.language_detected
 
     # ------------------------------------------------------------ public API
     def start(self, on_event: Callable[[StreamEvent], None]) -> None:
@@ -317,9 +318,14 @@ class ShisaRealtimeASR(StreamingASR):
                                        t_start=self._wall(m.get("audio_start_ms")),
                                        t_end=self._wall(m.get("audio_end_ms")),
                                        result_id=m.get("result_id")))
+        elif kind == "utterance.language_detected":
+            # The only event that carries the language: asr.final_result has none (seen live 2026-10-09).
+            if utt is not None:
+                self._utt_lang[utt] = m.get("language")
         elif kind == "asr.final_result":
+            lang = m.get("language") or self._utt_lang.pop(utt or "", None)
             self._on_event(StreamEvent("final", utt, text=str(m.get("text") or "").strip(),
-                                       language=normalize_language(m.get("language")),
+                                       language=normalize_language(lang),
                                        t_start=self._wall(m.get("audio_start_ms")),
                                        t_end=self._wall(m.get("audio_end_ms")),
                                        replaces=[str(r) for r in m.get("replaces") or []],
