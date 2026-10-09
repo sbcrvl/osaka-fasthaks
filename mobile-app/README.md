@@ -18,7 +18,7 @@ cd ~/Projects/test/hashi/mobile-app
 npm start
 ```
 
-Open the QR code in **Expo Go matching SDK 57**, with the phone and computer on the same Wi-Fi. The app automatically uses the Expo development server’s LAN hostname with port `8080`. Allow local network access when prompted. If that address is incorrect, tap **Server settings** at the bottom of the screen and enter a phone address printed by the socket server. On a physical phone, `localhost` refers to the phone.
+Open the QR code in **Expo Go matching SDK 57**, with the phone and computer on the same Wi-Fi. The app automatically uses the Expo development server’s LAN hostname with port `8080`. Allow local network access when prompted. If that address is incorrect, tap **Server settings** at the top of the screen above the people and enter a phone address printed by the socket server. On a physical phone, `localhost` refers to the phone.
 
 Use [Expo’s download page](https://expo.dev/go) for a matching Expo Go build. SDK compatibility follows [Expo’s version guidance](https://docs.expo.dev/troubleshooting/expo-go-version-mismatch/). `npm run ios` opens the iOS simulator, `npm run android` opens the Android emulator, and `npm run web` opens a browser preview. For an Android emulator, use `ws://10.0.2.2:8080` if automatic discovery cannot reach the server. Expo tunnels only tunnel Metro; the WebSocket server still needs its own reachable address.
 
