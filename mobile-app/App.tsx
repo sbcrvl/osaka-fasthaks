@@ -1,4 +1,4 @@
-import Constants from 'expo-constants';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useRef, useState } from 'react';
@@ -6,9 +6,9 @@ import { ActivityIndicator, FlatList, KeyboardAvoidingView, Modal, Platform, Pre
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { languageName, otherUser, type Message, type UserId } from './protocol';
 import { useConversation } from './useConversation';
+import { useSpeech } from './useSpeech';
 
-const host = Constants.expoConfig?.hostUri?.split(':')[0] ?? 'localhost';
-const defaultUrl = process.env.EXPO_PUBLIC_WS_URL ?? `ws://${host}:8080`;
+const defaultUrl = process.env.EXPO_PUBLIC_WS_URL ?? 'ws://10.249.32.93:8080';
 const people: Record<UserId, string> = { 'person-1': 'Person 1', 'person-2': 'Person 2' };
 
 /** A quiet shared view of two people speaking across languages. */
@@ -18,6 +18,7 @@ function Conversation({ url, onConnect }: { url: string; onConnect: (url: string
   const [addressError, setAddressError] = useState('');
   const [headerHeight, setHeaderHeight] = useState(0);
   const { messages, status, error, translations, translate } = useConversation(url);
+  const { speech, speak } = useSpeech();
   const list = useRef<FlatList<Message>>(null);
   const nearBottom = useRef(true);
   const latest: Partial<Record<UserId, string>> = {};
@@ -37,6 +38,22 @@ function Conversation({ url, onConnect }: { url: string; onConnect: (url: string
     }
   }
 
+  function speakerButton(key: string, text: string, language: string, translated = false) {
+    const selected = speech?.key === key;
+    const playing = selected && !speech.error;
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${playing ? 'Stop reading' : 'Read'} ${translated ? 'translation' : 'original message'}${playing ? '' : ' aloud'} in ${languageName(language)}: ${text}`}
+        accessibilityState={{ busy: selected && speech.pending }}
+        onPress={() => void speak(key, text, language)}
+        style={({ pressed }) => [styles.speakerButton, pressed && styles.pressed]}
+      >
+        {selected && speech.pending ? <ActivityIndicator size="small" color="#25685F" /> : <Ionicons name={playing ? 'stop' : 'volume-medium-outline'} size={20} color="#25685F" />}
+      </Pressable>
+    );
+  }
+
   function renderMessage({ item: message }: { item: Message }) {
     const right = message.userId === 'person-2';
     const target = latest[otherUser(message.userId)];
@@ -48,11 +65,19 @@ function Conversation({ url, onConnect }: { url: string; onConnect: (url: string
       <View style={[styles.messageRow, right && styles.rightRow]}>
         <Text style={styles.messageMeta}>{people[message.userId]} · {languageName(message.language)}</Text>
         <View style={[styles.bubble, right ? styles.rightBubble : styles.leftBubble]}>
-          <Text selectable style={styles.messageText}>{message.text}</Text>
+          <View style={styles.spokenText}>
+            <Text selectable style={[styles.messageText, styles.spokenCopy]}>{message.text}</Text>
+            {speakerButton(`${message.id}:original`, message.text, message.language)}
+          </View>
+          {speech?.key === `${message.id}:original` && speech.error && <Text accessibilityRole="alert" style={styles.inlineError}>{speech.error}</Text>}
           {translation?.text && (
             <View style={styles.translation}>
               <Text style={styles.translationLabel}>{languageName(target!)}</Text>
-              <Text selectable style={styles.messageText}>{translation.text}</Text>
+              <View style={styles.spokenText}>
+                <Text selectable style={[styles.messageText, styles.spokenCopy]}>{translation.text}</Text>
+                {speakerButton(`${message.id}:${target}`, translation.text, target!, true)}
+              </View>
+              {speech?.key === `${message.id}:${target}` && speech.error && <Text accessibilityRole="alert" style={styles.inlineError}>{speech.error}</Text>}
             </View>
           )}
           <Pressable
@@ -157,6 +182,9 @@ const styles = StyleSheet.create({
   leftBubble: { backgroundColor: '#E7EEE6', borderTopLeftRadius: 5 },
   rightBubble: { backgroundColor: '#F3E6DA', borderTopRightRadius: 5 },
   messageText: { fontSize: 16, lineHeight: 25, color: '#263D35' },
+  spokenText: { flexDirection: 'row', alignItems: 'flex-start', gap: 4 },
+  spokenCopy: { flexShrink: 1 },
+  speakerButton: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', marginTop: -9, marginRight: -9 },
   translation: { marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#CAD4C8', gap: 5 },
   translationLabel: { fontSize: 10, letterSpacing: 1, fontWeight: '700', color: '#25685F' },
   translateButton: { flexDirection: 'row', alignItems: 'center', gap: 7, minHeight: 44, paddingVertical: 10 },
