@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "reachy_mini_intermediator"
+version = "0.1.0"
+description = "Reachy Mini as an interpreter between two people: live transcription, translation and speech, streamed to client apps over WebSocket."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "reachy-mini",
+    "numpy",
+    "requests",
+    "starlette>=0.37",
+    "uvicorn[standard]>=0.29",   # includes the websockets package
+    "webrtcvad-wheels>=2.0.14",
+]
+keywords = ["reachy-mini-app"]
+
+[project.optional-dependencies]
+# Offline speech recognition (Whisper on CPU/GPU).
+local-asr = ["faster-whisper>=1.1"]
+# Claude as the translator.
+claude = ["anthropic>=0.40"]
+# A microphone or speaker on the computer running the server (--source mic, --speak local).
+local-audio = ["sounddevice"]
+all = ["faster-whisper>=1.1", "anthropic>=0.40", "sounddevice"]
+dev = ["pytest"]
+
+[project.scripts]
+reachy-mini-intermediator = "reachy_mini_intermediator.cli:main"
+
+[project.entry-points."reachy_mini_apps"]
+reachy_mini_intermediator = "reachy_mini_intermediator.main:ReachyMiniIntermediator"
+
+[tool.setuptools]
+package-dir = { "" = "." }
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["reachy_mini_intermediator*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

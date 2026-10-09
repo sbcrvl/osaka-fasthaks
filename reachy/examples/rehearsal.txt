@@ -1,0 +1,7 @@
+# Scripted lines for --asr script:examples/rehearsal.txt (one per utterance, "lang|text").
+# Pair with any WAV of two people taking turns to rehearse the client app without a key.
+ja|はじめまして、アイコです。
+en|Nice to meet you, I'm Ben. Is this your first time at this meetup?
+ja|いいえ、三回目です。今日のロボットのデモが楽しみです。
+en|Me too. Do you know a good ramen place near here?
+ja|駅の近くに美味しいお店がありますよ。あとで一緒に行きましょう。
