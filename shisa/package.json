@@ -1,0 +1,10 @@
+{
+  "name": "shisa-voz",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "translate": "node --env-file=.env cli.mjs",
+    "test": "node --test '*.test.mjs'"
+  }
+}
